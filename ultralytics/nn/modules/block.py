@@ -63,101 +63,101 @@ __all__ = (
 )
 
 
-class DFL(nn.Module):
-    """
-    Integral module of Distribution Focal Loss (DFL).
+# class DFL(nn.Module):
+#     """
+#     Integral module of Distribution Focal Loss (DFL).
 
-    Proposed in Generalized Focal Loss https://ieeexplore.ieee.org/document/9792391
-    """
+#     Proposed in Generalized Focal Loss https://ieeexplore.ieee.org/document/9792391
+#     """
 
-    def __init__(self, c1=16):
-        """Initialize a convolutional layer with a given number of input channels."""
-        super().__init__()
-        self.conv = nn.Conv2d(c1, 1, 1, bias=False).requires_grad_(False)
-        x = torch.arange(c1, dtype=torch.float)
-        self.conv.weight.data[:] = nn.Parameter(x.view(1, c1, 1, 1))
-        self.c1 = c1
+#     def __init__(self, c1=16):
+#         """Initialize a convolutional layer with a given number of input channels."""
+#         super().__init__()
+#         self.conv = nn.Conv2d(c1, 1, 1, bias=False).requires_grad_(False)
+#         x = torch.arange(c1, dtype=torch.float)
+#         self.conv.weight.data[:] = nn.Parameter(x.view(1, c1, 1, 1))
+#         self.c1 = c1
 
-    def forward(self, x):
-        """Applies a transformer layer on input tensor 'x' and returns a tensor."""
-        b, _, a = x.shape  # batch, channels, anchors
-        return self.conv(x.view(b, 4, self.c1, a).transpose(2, 1).softmax(1)).view(b, 4, a)
-        # return self.conv(x.view(b, self.c1, 4, a).softmax(1)).view(b, 4, a)
-
-
-class Proto(nn.Module):
-    """YOLOv8 mask Proto module for segmentation models."""
-
-    def __init__(self, c1, c_=256, c2=32):
-        """
-        Initializes the YOLOv8 mask Proto module with specified number of protos and masks.
-
-        Input arguments are ch_in, number of protos, number of masks.
-        """
-        super().__init__()
-        self.cv1 = Conv(c1, c_, k=3)
-        self.upsample = nn.ConvTranspose2d(c_, c_, 2, 2, 0, bias=True)  # nn.Upsample(scale_factor=2, mode='nearest')
-        self.cv2 = Conv(c_, c_, k=3)
-        self.cv3 = Conv(c_, c2)
-
-    def forward(self, x):
-        """Performs a forward pass through layers using an upsampled input image."""
-        return self.cv3(self.cv2(self.upsample(self.cv1(x))))
+#     def forward(self, x):
+#         """Applies a transformer layer on input tensor 'x' and returns a tensor."""
+#         b, _, a = x.shape  # batch, channels, anchors
+#         return self.conv(x.view(b, 4, self.c1, a).transpose(2, 1).softmax(1)).view(b, 4, a)
+#         # return self.conv(x.view(b, self.c1, 4, a).softmax(1)).view(b, 4, a)
 
 
-class HGStem(nn.Module):
-    """
-    StemBlock of PPHGNetV2 with 5 convolutions and one maxpool2d.
+# class Proto(nn.Module):
+#     """YOLOv8 mask Proto module for segmentation models."""
 
-    https://github.com/PaddlePaddle/PaddleDetection/blob/develop/ppdet/modeling/backbones/hgnet_v2.py
-    """
+#     def __init__(self, c1, c_=256, c2=32):
+#         """
+#         Initializes the YOLOv8 mask Proto module with specified number of protos and masks.
 
-    def __init__(self, c1, cm, c2):
-        """Initialize the SPP layer with input/output channels and specified kernel sizes for max pooling."""
-        super().__init__()
-        self.stem1 = Conv(c1, cm, 3, 2, act=nn.ReLU())
-        self.stem2a = Conv(cm, cm // 2, 2, 1, 0, act=nn.ReLU())
-        self.stem2b = Conv(cm // 2, cm, 2, 1, 0, act=nn.ReLU())
-        self.stem3 = Conv(cm * 2, cm, 3, 2, act=nn.ReLU())
-        self.stem4 = Conv(cm, c2, 1, 1, act=nn.ReLU())
-        self.pool = nn.MaxPool2d(kernel_size=2, stride=1, padding=0, ceil_mode=True)
+#         Input arguments are ch_in, number of protos, number of masks.
+#         """
+#         super().__init__()
+#         self.cv1 = Conv(c1, c_, k=3)
+#         self.upsample = nn.ConvTranspose2d(c_, c_, 2, 2, 0, bias=True)  # nn.Upsample(scale_factor=2, mode='nearest')
+#         self.cv2 = Conv(c_, c_, k=3)
+#         self.cv3 = Conv(c_, c2)
 
-    def forward(self, x):
-        """Forward pass of a PPHGNetV2 backbone layer."""
-        x = self.stem1(x)
-        x = F.pad(x, [0, 1, 0, 1])
-        x2 = self.stem2a(x)
-        x2 = F.pad(x2, [0, 1, 0, 1])
-        x2 = self.stem2b(x2)
-        x1 = self.pool(x)
-        x = torch.cat([x1, x2], dim=1)
-        x = self.stem3(x)
-        x = self.stem4(x)
-        return x
+#     def forward(self, x):
+#         """Performs a forward pass through layers using an upsampled input image."""
+#         return self.cv3(self.cv2(self.upsample(self.cv1(x))))
 
 
-class HGBlock(nn.Module):
-    """
-    HG_Block of PPHGNetV2 with 2 convolutions and LightConv.
+# class HGStem(nn.Module):
+#     """
+#     StemBlock of PPHGNetV2 with 5 convolutions and one maxpool2d.
 
-    https://github.com/PaddlePaddle/PaddleDetection/blob/develop/ppdet/modeling/backbones/hgnet_v2.py
-    """
+#     https://github.com/PaddlePaddle/PaddleDetection/blob/develop/ppdet/modeling/backbones/hgnet_v2.py
+#     """
 
-    def __init__(self, c1, cm, c2, k=3, n=6, lightconv=False, shortcut=False, act=nn.ReLU()):
-        """Initializes a CSP Bottleneck with 1 convolution using specified input and output channels."""
-        super().__init__()
-        block = LightConv if lightconv else Conv
-        self.m = nn.ModuleList(block(c1 if i == 0 else cm, cm, k=k, act=act) for i in range(n))
-        self.sc = Conv(c1 + n * cm, c2 // 2, 1, 1, act=act)  # squeeze conv
-        self.ec = Conv(c2 // 2, c2, 1, 1, act=act)  # excitation conv
-        self.add = shortcut and c1 == c2
+#     def __init__(self, c1, cm, c2):
+#         """Initialize the SPP layer with input/output channels and specified kernel sizes for max pooling."""
+#         super().__init__()
+#         self.stem1 = Conv(c1, cm, 3, 2, act=nn.ReLU())
+#         self.stem2a = Conv(cm, cm // 2, 2, 1, 0, act=nn.ReLU())
+#         self.stem2b = Conv(cm // 2, cm, 2, 1, 0, act=nn.ReLU())
+#         self.stem3 = Conv(cm * 2, cm, 3, 2, act=nn.ReLU())
+#         self.stem4 = Conv(cm, c2, 1, 1, act=nn.ReLU())
+#         self.pool = nn.MaxPool2d(kernel_size=2, stride=1, padding=0, ceil_mode=True)
 
-    def forward(self, x):
-        """Forward pass of a PPHGNetV2 backbone layer."""
-        y = [x]
-        y.extend(m(y[-1]) for m in self.m)
-        y = self.ec(self.sc(torch.cat(y, 1)))
-        return y + x if self.add else y
+#     def forward(self, x):
+#         """Forward pass of a PPHGNetV2 backbone layer."""
+#         x = self.stem1(x)
+#         x = F.pad(x, [0, 1, 0, 1])
+#         x2 = self.stem2a(x)
+#         x2 = F.pad(x2, [0, 1, 0, 1])
+#         x2 = self.stem2b(x2)
+#         x1 = self.pool(x)
+#         x = torch.cat([x1, x2], dim=1)
+#         x = self.stem3(x)
+#         x = self.stem4(x)
+#         return x
+
+
+# class HGBlock(nn.Module):
+#     """
+#     HG_Block of PPHGNetV2 with 2 convolutions and LightConv.
+
+#     https://github.com/PaddlePaddle/PaddleDetection/blob/develop/ppdet/modeling/backbones/hgnet_v2.py
+#     """
+
+#     def __init__(self, c1, cm, c2, k=3, n=6, lightconv=False, shortcut=False, act=nn.ReLU()):
+#         """Initializes a CSP Bottleneck with 1 convolution using specified input and output channels."""
+#         super().__init__()
+#         block = LightConv if lightconv else Conv
+#         self.m = nn.ModuleList(block(c1 if i == 0 else cm, cm, k=k, act=act) for i in range(n))
+#         self.sc = Conv(c1 + n * cm, c2 // 2, 1, 1, act=act)  # squeeze conv
+#         self.ec = Conv(c2 // 2, c2, 1, 1, act=act)  # excitation conv
+#         self.add = shortcut and c1 == c2
+
+#     def forward(self, x):
+#         """Forward pass of a PPHGNetV2 backbone layer."""
+#         y = [x]
+#         y.extend(m(y[-1]) for m in self.m)
+#         y = self.ec(self.sc(torch.cat(y, 1)))
+#         return y + x if self.add else y
 
 
 class SPP(nn.Module):
