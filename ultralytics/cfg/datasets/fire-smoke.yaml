@@ -1,4 +1,4 @@
-path: /kaggle/input/fire-smoke-dataset/data #root dir
+path: /kaggle/working/fire-smoke-dataset/data #root dir
 
 train: images/train
 val: images/val
