@@ -1,4 +1,4 @@
-# A Dual Track YOLO-based Network for fire and smoke detection
+## A Dual Track YOLO-based Network for fire and smoke detection
 
 ## Overview
 
