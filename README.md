@@ -9,7 +9,7 @@ To achieve these results, we propose a novel deep learning model that, for the f
 ## Key Modifications and Contributions
 
 ### 1. Configuration Files (YAML)
-- **Location**: `Ultralytics/ultralytics/cfg/models/yamls/` directory
+- **Location**: `Ultralytics/ultralytics/cfg/models/yamls/` 
 - **Purpose**: Custom training configurations, model architectures, and hyperparameter settings
 - **Key Files**:
   - `CNN_track.yaml` - Architecture of CNN-Track composed of Depthwise Separable C3k2 (DWC3k2) blocks.
