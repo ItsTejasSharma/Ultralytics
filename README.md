@@ -116,6 +116,15 @@ D-Fire is an image dataset of fire and smoke occurrences designed for machine le
 
 Annotations follow the YOLO format, with normalized coordinates between 0 and 1.
 
+### Example images
+
+Below are some representative samples from the D-Fire dataset showcasing different scenarios of fire and smoke detection. 
+
+<p align="center">
+    <img width="500" src="./dfire_examples.png" alt="D-Fire examples">
+<p>
+
+
 
 ## Acknowledgments
 
